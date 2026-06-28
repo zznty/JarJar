@@ -15,7 +15,8 @@ plugins {
 
 gradleutils.displayName = 'Forge Jar-in-Jar Gradle'
 description = "Enables buildscripts to embed dependencies using Forge's Jar-in-Jar specification with minimal hassle."
-group = 'net.minecraftforge'
+// Rebranded group (net.zznty) to disambiguate this cross-loader fork from upstream net.minecraftforge.
+group = 'net.zznty'
 version = gitversion.tagOffset
 
 java {
@@ -53,7 +54,7 @@ tasks.named('jar', Jar) {
 tasks.named('shadowJar', ShadowJar) {
     enableAutoRelocation = true
     archiveClassifier = null
-    relocationPrefix = 'net.minecraftforge.jarjar.gradle.shadow'
+    relocationPrefix = 'net.zznty.jarjar.gradle.shadow'
 }
 
 tasks.withType(Javadoc).configureEach {
@@ -69,7 +70,8 @@ gradlePlugin {
     vcsUrl = gitversion.url + '.git'
 
     plugins.register('jarjar') {
-        id = 'net.minecraftforge.jarjar'
+        // Renamed plugin id (net.zznty.jarjar) to disambiguate from upstream net.minecraftforge.jarjar.
+        id = 'net.zznty.jarjar'
         implementationClass = 'net.minecraftforge.jarjar.gradle.JarJarPlugin'
         displayName = 'Forge Jar-in-Jar' // same as the display name without the "Gradle" part
         description = project.description
@@ -79,7 +81,17 @@ gradlePlugin {
 
 publishing {
     repositories {
-        maven gradleutils.getPublishingForgeMaven(rootProject.file('../repo'))
+        // Our Reposilite maven (maven.zznty.ru). Snapshots vs releases is picked from the version.
+        maven {
+            name = 'zznty'
+            url = version.toString().endsWith('-SNAPSHOT')
+                ? 'https://maven.zznty.ru/snapshots'
+                : 'https://maven.zznty.ru/releases'
+            credentials {
+                username = providers.environmentVariable('MAVEN_USER').orElse('').get()
+                password = providers.environmentVariable('MAVEN_PASSWORD').orElse('').get()
+            }
+        }
     }
 
     publications.register('pluginMaven', MavenPublication) {
